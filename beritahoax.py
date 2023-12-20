@@ -1,9 +1,11 @@
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
-from text_processing import process_text  # Assuming this module contains your text processing functions
+from text_processing import process_text  
 import hydralit_components as hc
 import streamlit as st
+from wordcloud import WordCloud
+import pandas as pd
 
 # Load your machine learning models
 model_svm = 'hoaxsvm.pkl'
@@ -11,11 +13,16 @@ model_rf = 'hoaxrf.pkl'
 
 def predict_hoax_svm(text):
     prediction = model_svm.predict([text])[0]
-    probabilities = model_svm.decision_function([text])[0]
-    prob_fake = probabilities  # Assuming it's a decision function output
+    decision_function_values = model_svm.decision_function([text])[0]
+    
+    # Menggunakan fungsi sigmoid untuk mendapatkan nilai probabilitas antara 0 dan 1
+    prob_fake = 1 / (1 + np.exp(-decision_function_values))
     prob_true = 1 - prob_fake
-
+    
     return prediction, prob_fake, prob_true
+
+
+
 
 def predict_hoax_rf(text):
     prediction = model_rf.predict([text])[0]
@@ -27,7 +34,7 @@ def predict_hoax_rf(text):
 
 def home():
     st.title("Home")
-    # Tambahkan konten untuk halaman home di sini
+    st.write("Berita hoax adalah informasi palsu atau tidak benar yang disajikan sebagai berita nyata dengan tujuan untuk menyesatkan pembaca atau pendengar. Biasanya, berita hoax dibuat dan disebarkan secara sengaja dengan maksud tertentu, seperti memengaruhi opini publik, menciptakan ketegangan sosial, atau mendapatkan keuntungan pribadi.")
 
 def predict_news():
     st.title("Prediksi Berita")
@@ -36,7 +43,6 @@ def predict_news():
     # Input text box
     input_text = st.text_area("Teks Berita", "")
 
-    # Detect button
     if st.button("Deteksi"):
         if input_text:
             # Predictions for SVM model
@@ -45,44 +51,72 @@ def predict_news():
             # Predictions for Random Forest model
             prediction_rf, prob_fake_rf, prob_true_rf = predict_hoax_rf(input_text)
 
-            st.write("### SVM Model:")
-            st.write("Prediksi:", prediction_svm)
-            st.write("Nilai Keputusan (Decision Function):", prob_fake_svm)
+            # Menampilkan hasil dalam dua kolom
+            col1, col2 = st.columns(2)
 
-            st.write("### Random Forest Model:")
-            st.write("Prediksi:", prediction_rf)
-            st.write("Probabilitas Hoax:", prob_fake_rf)
-            st.write("Probabilitas Valid:", prob_true_rf)
+            with col1:
+                st.write("### SVM Model:")
+                #st.write("Prediksi:", prediction_svm)
+                st.write("Nilai Keputusan (Decision Function):", prob_fake_svm)
 
-            # Create pie charts for both models
-            labels_svm = ['Hoax', 'Valid']
-            probabilities_svm = [prob_fake_svm, prob_true_svm]
+            with col2:
+                st.write("### Random Forest Model:")
+                #st.write("Prediksi:", prediction_rf)
+                st.write("Probabilitas Hoax:", prob_fake_rf)
+                st.write("Probabilitas Valid:", prob_true_rf)
 
-            labels_rf = ['Hoax', 'Valid']
-            probabilities_rf = [prob_fake_rf, prob_true_rf]
+            # Menentukan hasil akhir berdasarkan probabilitas
+            final_result_svm = "Fake" if prob_fake_svm > prob_true_svm else "Valid"
+            final_result_rf = "Fake" if prob_fake_rf > prob_true_rf else "Valid"
 
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+            st.write("### Hasil Akhir:")
+            st.write("SVM Model:", final_result_svm)
+            st.write("Random Forest Model:", final_result_rf)
+            
+            # Visualisasi probabilitas
+            labels = ['Hoax (SVM)', 'Valid (SVM)', 'Hoax (RF)', 'Valid (RF)']
+            probabilities = [prob_fake_svm, prob_true_svm, prob_fake_rf, prob_true_rf]
 
-            ax1.pie(probabilities_svm, labels=labels_svm, autopct='%1.1f%%', startangle=90)
-            ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-            ax1.set_title('SVM Model')
+            fig, ax = plt.subplots()
+            bars = ax.bar(labels, probabilities, color=['red', 'green', 'blue', 'yellow'])
 
-            ax2.pie(probabilities_rf, labels=labels_rf, autopct='%1.1f%%', startangle=90)
-            ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-            ax2.set_title('Random Forest Model')
+            for bar in bars:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 2), ha='center', va='bottom')
 
-            st.pyplot(fig)  # Display the plot in Streamlit
+            plt.ylabel('Probabilitas')
+            plt.title('Probabilitas Prediksi')
+            st.pyplot(fig)
+            
+            # Word cloud
+            st.write("### Word Cloud:")
+            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(input_text)
+            plt.figure(figsize=(10, 5))
+            plt.imshow(wordcloud, interpolation='bilinear')
+            plt.axis('off')
+            st.pyplot(plt)
         else:
             st.write("Mohon masukkan teks berita terlebih dahulu.")
 
 def about():
     st.title("About")
-    # Tambahkan konten untuk halaman about di sini
+    st.write("Web aplikasi ini dibuat untuk menjadi Tugas Akhir untuk mata kuliah Aplikasi Web")
 
 def data():
     st.title("Data")
-    # Tambahkan konten untuk halaman data di sini
-
+    file_path = "D:\streamlit\dataset\Data_latih.csv"
+    df = pd.read_csv(file_path)
+    st.write(df)
+    
+    # Menyusun ulang dataset untuk membuatnya seimbang
+    false_news = df[df['label'] == 1].sample(frac=1)
+    true_fact = df[df['label'] == 0]
+    balanced_df = pd.concat([true_fact, false_news[:len(true_fact) + 200]])
+    
+    # Menampilkan dataset yang telah disusun ulang
+    st.title("Dataset Setelah Disusun Ulang")
+    st.write(balanced_df)
+    
 def main():
     st.sidebar.title("Menu")
     menu_options = ["Home", "Prediksi Berita", "About", "Data"]
