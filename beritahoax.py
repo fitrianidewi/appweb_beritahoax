@@ -6,6 +6,7 @@ import hydralit_components as hc
 import streamlit as st
 from wordcloud import WordCloud
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
 
 # Load your machine learning models
 model_svm = 'hoaxsvm.pkl'
@@ -21,9 +22,6 @@ def predict_hoax_svm(text):
     
     return prediction, prob_fake, prob_true
 
-
-
-
 def predict_hoax_rf(text):
     prediction = model_rf.predict([text])[0]
     probabilities = model_rf.predict_proba([text])[0]
@@ -31,6 +29,36 @@ def predict_hoax_rf(text):
     prob_true = probabilities[1]
 
     return prediction, prob_fake, prob_true
+
+def generate_wordcloud(data, title):
+    all_words = ' '.join(data)
+    wordcloud = WordCloud(width=800, height=500, max_font_size=110, collocations=False).generate(all_words)
+    fig, ax = plt.subplots(figsize=(10, 7))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis("off")
+    ax.set_title(title)
+    st.pyplot(fig)
+    
+def most_common_words(data, title, num_words=10):
+    vectorizer = CountVectorizer(stop_words='english')
+    X = vectorizer.fit_transform(data)
+    feature_names = vectorizer.get_feature_names_out()
+
+    word_counts = X.sum(axis=0).A1
+    word_counts_df = pd.DataFrame({'Word': feature_names, 'Count': word_counts})
+    sorted_word_counts = word_counts_df.sort_values(by='Count', ascending=False).head(num_words)
+
+    st.title(f"Most Common Words in {title}:")
+    st.write(sorted_word_counts)
+    
+    # Visualisasi kata-kata yang sering muncul
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.bar(sorted_word_counts['Word'], sorted_word_counts['Count'], color='skyblue')
+    ax.set_xticklabels(sorted_word_counts['Word'], rotation=45, ha='right')
+    ax.set_xlabel('Word')
+    ax.set_ylabel('Count')
+    ax.set_title(f"Top {num_words} Most Common Words in {title}")
+    st.pyplot(fig)
 
 def home():
     st.title("Home")
@@ -113,9 +141,28 @@ def data():
     true_fact = df[df['label'] == 0]
     balanced_df = pd.concat([true_fact, false_news[:len(true_fact) + 200]])
     
-    # Menampilkan dataset yang telah disusun ulang
-    st.title("Dataset Setelah Disusun Ulang")
-    st.write(balanced_df)
+    show_balanced_df = st.checkbox("Tampilkan Dataset Setelah Disusun Ulang")
+    if show_balanced_df:
+        st.title("Dataset Setelah Disusun Ulang")
+        st.write(balanced_df)
+        
+    show_wordcloud = st.checkbox("Tampilkan WordCloud")
+    if show_wordcloud:
+        st.title("WordCloud:")
+        st.subheader("WordCloud Data Fake")
+        generate_wordcloud(false_news['judul'], "WordCloud Data Fake")
+        
+        st.subheader("WordCloud Data Truth")
+        generate_wordcloud(true_fact['judul'], "WordCloud Data Valid")
+        
+        
+    # Checkbox untuk menampilkan WordCloud
+    show_wordcloud = st.checkbox("Tampilkan Kata-kata yang Sering Muncul")
+    if show_wordcloud:
+        # Analisis kata-kata umum
+        most_common_words(false_news['judul'], "Data Fake")
+        most_common_words(true_fact['judul'], "Data Truth")
+
     
 def main():
     st.sidebar.title("Menu")
