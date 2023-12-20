@@ -1,3 +1,4 @@
+import nltk
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,39 +31,57 @@ def predict_hoax_rf(text):
 
     return prediction, prob_fake, prob_true
 
-def generate_wordcloud(data, title):
-    all_words = ' '.join(data)
-    wordcloud = WordCloud(width=800, height=500, max_font_size=110, collocations=False).generate(all_words)
-    fig, ax = plt.subplots(figsize=(10, 7))
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis("off")
-    ax.set_title(title)
-    st.pyplot(fig)
-    
-def most_common_words(data, title, num_words=10):
-    vectorizer = CountVectorizer(stop_words='english')
-    X = vectorizer.fit_transform(data)
-    feature_names = vectorizer.get_feature_names_out()
+def process_dataframe(df):
+    # Proses teks di dalam DataFrame
+    df['processed_text'] = df['judul'].apply(process_text)
+    return df
 
-    word_counts = X.sum(axis=0).A1
-    word_counts_df = pd.DataFrame({'Word': feature_names, 'Count': word_counts})
-    sorted_word_counts = word_counts_df.sort_values(by='Count', ascending=False).head(num_words)
+def most_common_words(text_series, title):
+    # Menggabungkan semua teks dalam satu string
+    all_text = ' '.join(text_series.astype(str))
 
-    st.title(f"Most Common Words in {title}:")
-    st.write(sorted_word_counts)
-    
-    # Visualisasi kata-kata yang sering muncul
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.bar(sorted_word_counts['Word'], sorted_word_counts['Count'], color='skyblue')
-    ax.set_xticklabels(sorted_word_counts['Word'], rotation=45, ha='right')
-    ax.set_xlabel('Word')
-    ax.set_ylabel('Count')
-    ax.set_title(f"Top {num_words} Most Common Words in {title}")
+    # Tokenisasi dan hitung frekuensi kata
+    tokens = process_text(all_text)
+    frequency = nltk.FreqDist(tokens)
+
+    # Membuat DataFrame untuk kata-kata yang paling sering muncul
+    df_frequency = pd.DataFrame({"Word": list(frequency.keys()), "Frequency": list(frequency.values())})
+    df_frequency = df_frequency.nlargest(columns="Frequency", n=20)
+
+    # Menampilkan visualisasi kata-kata yang sering muncul
+    st.subheader(f"Kata-kata yang Sering Muncul ({title})")
+    fig, ax = plt.subplots()
+    ax.bar(df_frequency["Word"], df_frequency["Frequency"], color='blue')
+    plt.xticks(rotation='vertical')
+    plt.xlabel('Kata')
+    plt.ylabel('Frekuensi')
+    plt.title(f'Kata-kata yang Sering Muncul ({title})')
     st.pyplot(fig)
+
+def generate_wordcloud(text_series, title):
+    # Menggabungkan semua teks dalam satu string
+    all_text = ' '.join(text_series.astype(str))
+
+    # Membuat dan menampilkan WordCloud
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(all_text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.title(f'WordCloud ({title})')
+    st.pyplot(plt)
+
+    
 
 def home():
     st.title("Home")
     st.write("Berita hoax adalah informasi palsu atau tidak benar yang disajikan sebagai berita nyata dengan tujuan untuk menyesatkan pembaca atau pendengar. Biasanya, berita hoax dibuat dan disebarkan secara sengaja dengan maksud tertentu, seperti memengaruhi opini publik, menciptakan ketegangan sosial, atau mendapatkan keuntungan pribadi.")
+    
+    st.write("Di dunia informasi yang semakin kompleks dan terhubung, penyebaran berita hoax menjadi ancaman serius. Berita hoax adalah informasi palsu atau tidak benar yang disajikan sebagai berita yang sebenarnya, dengan tujuan untuk menyesatkan pembaca atau pendengar. Praktik ini biasanya dilakukan dengan sengaja, dengan motivasi seperti mempengaruhi opini publik, menciptakan ketegangan sosial, atau bahkan untuk keuntungan pribadi.")
+    st.write("Berita hoax sangat merugikan masyarakat, karena dapat menyebabkan kebingungan, mempengaruhi pengambilan keputusan yang salah, dan memicu konflik yang tidak perlu. Oleh karena itu, penting bagi kita semua untuk menjadi konsumen berita yang cerdas dan kritis. Kita perlu memverifikasi informasi sebelum mempercayainya, menggunakan sumber berita yang terpercaya, dan berbagi informasi yang akurat kepada orang lain.")
+    st.write("Dalam era informasi digital, kecerdasan kita dalam memilah berita menjadi kunci untuk menjaga integritas informasi dan membangun masyarakat yang berdasarkan pada pengetahuan yang benar.")
+    
+    
+    st.error('WARNING : Streamlit ini masih belum sempurna, termasuk dalam pendeteksian berita')
 
 def predict_news():
     st.title("Prediksi Berita")
@@ -129,37 +148,51 @@ def predict_news():
 def about():
     st.title("About")
     st.write("Web aplikasi ini dibuat untuk menjadi Tugas Akhir untuk mata kuliah Aplikasi Web")
+    
+    # Add your name, NIM, and department
+    name = "Fitriani Dewi"
+    nim = "21537141020"
+    department = "Teknologi Informasi"
+    
+    # Display personal information
+    st.subheader(":woman: Personal Information:")
+    st.write(f"Nama: {name}")
+    st.write(f"NIM: {nim}")
+    st.write(f"Jurusan: {department}")
+    
 
 def data():
     st.title("Data")
     file_path = "Data_latih.csv"
     df = pd.read_csv(file_path)
     st.write(df)
-    
+
+    # Proses DataFrame
+    df = process_dataframe(df)
+
     # Menyusun ulang dataset untuk membuatnya seimbang
     false_news = df[df['label'] == 1].sample(frac=1)
     true_fact = df[df['label'] == 0]
     balanced_df = pd.concat([true_fact, false_news[:len(true_fact) + 200]])
-    
+
     show_balanced_df = st.checkbox("Tampilkan Dataset Setelah Disusun Ulang")
     if show_balanced_df:
         st.title("Dataset Setelah Disusun Ulang")
         st.write(balanced_df)
-        
+
+    # Checkbox untuk menampilkan WordCloud
     show_wordcloud = st.checkbox("Tampilkan WordCloud")
     if show_wordcloud:
         st.title("WordCloud:")
         st.subheader("WordCloud Data Fake")
         generate_wordcloud(false_news['judul'], "WordCloud Data Fake")
-        
+
         st.subheader("WordCloud Data Truth")
         generate_wordcloud(true_fact['judul'], "WordCloud Data Valid")
-        
-        
-    # Checkbox untuk menampilkan WordCloud
-    show_wordcloud = st.checkbox("Tampilkan Kata-kata yang Sering Muncul")
-    if show_wordcloud:
-        # Analisis kata-kata umum
+
+    # Checkbox untuk menampilkan kata-kata yang sering muncul
+    show_most_common_words = st.checkbox("Tampilkan Kata-kata yang Sering Muncul")
+    if show_most_common_words:
         most_common_words(false_news['judul'], "Data Fake")
         most_common_words(true_fact['judul'], "Data Truth")
 
