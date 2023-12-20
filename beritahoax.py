@@ -104,7 +104,7 @@ def about():
 
 def data():
     st.title("Data")
-    file_path = "D:\streamlit\dataset\Data_latih.csv"
+    file_path = "Data_latih.csv"
     df = pd.read_csv(file_path)
     st.write(df)
     
