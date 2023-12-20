@@ -6,8 +6,8 @@ import hydralit_components as hc
 import streamlit as st
 
 # Load your machine learning models
-model_svm = joblib.load('D:/streamlit/dataset/cobahoaxsvm.pkl')
-model_rf = joblib.load('D:/streamlit/dataset/cobahoaxrf.pkl')
+model_svm = 'hoaxsvm.pkl'
+model_rf = 'hoaxrf.pkl'
 
 def predict_hoax_svm(text):
     prediction = model_svm.predict([text])[0]
