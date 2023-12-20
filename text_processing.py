@@ -1,21 +1,17 @@
 import nltk
 import re
+import json
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory, StopWordRemover, ArrayDictionary
 
-# Kamus slangword
-kamus_slangword = {
-    'kpn': 'kapan',
-    'gmn': 'bagaimana',
-    # Tambahkan kamus slangword lainnya sesuai kebutuhan
-}
-
-# Daftar stopwords tambahan
-more_stopword = ['dengan', 'bahwa', 'ia', 'oleh']
+# Membaca kamus slangword dari file
+with open("slangwords_dict.txt", "r") as file:
+    kamus_slangword = json.load(file)
 
 # Ambil Stopword bawaan
 stop_factory = StopWordRemoverFactory().get_stop_words()
+more_stopword = ['dengan', 'bahwa', 'ia', 'oleh']
 
-# Gabungkan stopword
+# Merge stopword
 new_stopword = stop_factory + more_stopword
 
 dictionary = ArrayDictionary(new_stopword)
@@ -24,13 +20,19 @@ stopword = StopWordRemover(dictionary)
 def process_text(review):
     review = review.lower()
     review = re.sub(r'http\S+', '', review)
+    # Remove @username
     review = re.sub('@[^\s]+', '', review)
+    # Remove #tagger
     review = re.sub(r'#([^\s]+)', '', review)
+    # Remove angka termasuk angka yang berada dalam string
+    # Remove non ASCII chars
     review = re.sub(r'[^\x00-\x7f]', r'', review)
     review = re.sub(r'(\\u[0-9A-Fa-f]+)', r'', review)
     review = re.sub(r"[^A-Za-z0-9^,!.\/'+-=]", " ", review)
     review = re.sub(r'\\u\w\w\w\w', '', review)
+    # Remove simbol, angka dan karakter aneh
     review = re.sub(r"[.,:;+!\-_<^/=?\"'\(\)\d\*]", " ", review)
+    # Pattern to look for three or more repetitions of any character, including newlines (contoh goool -> gool).
     pattern = re.compile(r"(.)\1{1,}", re.DOTALL)
     review = pattern.sub(r"\1\1", review)
 
@@ -45,6 +47,11 @@ def process_text(review):
         content.append(kata)
     review = ' '.join(content)
 
+    # stopwords = open(stopwords_Reduced.txt', 'r').read().split()
+    # content = []
+    # filteredtext = [word for word in review.split() if word not in stopwords]
+    # content.append(" ".join(filteredtext))
+    # review = content
     review = stopword.remove(review)
     token = nltk.word_tokenize(review)
     return token
