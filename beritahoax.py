@@ -16,8 +16,12 @@ from streamlit_lottie import st_lottie
 st.set_page_config(layout='wide', initial_sidebar_state='expanded')
 
 # Load your machine learning models
-model_svm = 'cobahoaxsvm.pkl'
-model_rf = 'cobahoaxrf.pkl'
+model_svm_path = 'cobahoaxsvm.pkl'
+model_rf_path = 'cobahoaxrf.pkl'
+
+# Load the models
+model_svm = joblib.load(model_svm_path)
+model_rf = joblib.load(model_rf_path)
 
 def predict_hoax_svm(text):
     prediction = model_svm.predict([text])[0]
