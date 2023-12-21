@@ -9,6 +9,7 @@ from wordcloud import WordCloud
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import nltk
+nltk.download('punkt')
 
 # Load your machine learning models
 model_svm = 'hoaxsvm.pkl'
