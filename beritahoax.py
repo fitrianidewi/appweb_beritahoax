@@ -11,17 +11,34 @@ from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 nltk.download('punkt')
 from streamlit_lottie import st_lottie
+import pickle
 
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded')
 
 # Load your machine learning models
-model_svm_path = 'hoaxsvm2.pkl'
-model_rf_path = 'hoaxrf2.pkl'
+#model_svm_path = 'hoaxsvm2.pkl'
+#model_rf_path = 'hoaxrf2.pkl'
 
 # Load the models
-model_svm = joblib.load(model_svm_path)
-model_rf = joblib.load(model_rf_path)
+#model_svm = joblib.load(model_svm_path)
+#model_rf = joblib.load(model_rf_path)
+
+
+# Save the models
+with open('hoaxsvm2.pkl', 'wb') as svm_file:
+    pickle.dump(model_svm, svm_file)
+
+with open('hoaxrf2.pkl', 'wb') as rf_file:
+    pickle.dump(model_rf, rf_file)
+
+# Load the models
+with open('hoaxsvm2.pkl', 'rb') as svm_file:
+    model_svm = pickle.load(svm_file)
+
+with open('hoaxrf2.pkl', 'rb') as rf_file:
+    model_rf = pickle.load(rf_file)
+
 
 def predict_hoax_svm(text):
     prediction = model_svm.predict([text])[0]
