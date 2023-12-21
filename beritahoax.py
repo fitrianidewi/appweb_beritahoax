@@ -37,6 +37,7 @@ def predict_hoax_rf(text):
 
     return prediction, prob_fake, prob_true
 
+
 def process_dataframe(df):
     # Proses teks di dalam DataFrame
     df['processed_text'] = df['judul'].apply(process_text)
