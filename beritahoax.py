@@ -10,6 +10,10 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 nltk.download('punkt')
+from streamlit_lottie import st_lottie
+
+
+st.set_page_config(layout='wide', initial_sidebar_state='expanded')
 
 # Load your machine learning models
 model_svm = 'hoaxsvm.pkl'
@@ -75,7 +79,18 @@ def generate_wordcloud(text_series, title):
     
 
 def home():
-    st.title("Home")
+    col1, col2 = st.columns([5,4])
+    with col1:
+        title = '''<br>
+        <span style='color: black; font-weight: 700'>Hoax News Detector '''
+        st.markdown(f"<h1 style='text-align: left; font-size: 60px; font-weight: 900;'>{title}</h1>", unsafe_allow_html=True)
+        sub_title = '''Accelerate your insight into misinformation with our cutting-edge hoax detection web tool. Uncover the power of effortless data analysis through Streamlit. Your go-to solution for transforming news data into vibrant visualizations, effortlessly accessible and user-friendly. Elevate your understanding and stay one step ahead in the fight against fake news.'''
+        st.markdown(f"<p style='text-align: justify; font-size: 18px; color: #555555;margin-bottom:310px'>{sub_title}</p>", unsafe_allow_html=True)
+
+
+    with col2:
+        st_lottie("https://lottie.host/f6c4d923-c06f-4a68-92b9-ad63c1b09683/msJtvE0eeF.json")
+    
     st.write("Berita hoax adalah informasi palsu atau tidak benar yang disajikan sebagai berita nyata dengan tujuan untuk menyesatkan pembaca atau pendengar. Biasanya, berita hoax dibuat dan disebarkan secara sengaja dengan maksud tertentu, seperti memengaruhi opini publik, menciptakan ketegangan sosial, atau mendapatkan keuntungan pribadi.")
     
     st.write("Di dunia informasi yang semakin kompleks dan terhubung, penyebaran berita hoax menjadi ancaman serius. Berita hoax adalah informasi palsu atau tidak benar yang disajikan sebagai berita yang sebenarnya, dengan tujuan untuk menyesatkan pembaca atau pendengar. Praktik ini biasanya dilakukan dengan sengaja, dengan motivasi seperti mempengaruhi opini publik, menciptakan ketegangan sosial, atau bahkan untuk keuntungan pribadi.")
@@ -137,30 +152,27 @@ def predict_news():
             plt.title('Probabilitas Prediksi')
             st.pyplot(fig)
             
-            # Word cloud
-            st.write("### Word Cloud:")
-            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(input_text)
-            plt.figure(figsize=(10, 5))
-            plt.imshow(wordcloud, interpolation='bilinear')
-            plt.axis('off')
-            st.pyplot(plt)
         else:
             st.write("Mohon masukkan teks berita terlebih dahulu.")
 
 def about():
-    st.title("About")
-    st.write("Web aplikasi ini dibuat untuk menjadi Tugas Akhir untuk mata kuliah Aplikasi Web")
+    col1, col2 = st.columns([5,4])
+    with col1:
+        st.title("About")
+        st.write("Web aplikasi ini dibuat untuk menjadi Tugas Akhir untuk mata kuliah Aplikasi Web")
     
-    # Add your name, NIM, and department
-    name = "Fitriani Dewi"
-    nim = "21537141020"
-    department = "Teknologi Informasi"
+        # Add your name, NIM, and department
+        name = "Fitriani Dewi"
+        nim = "21537141020"
+        department = "Teknologi Informasi"
     
-    # Display personal information
-    st.subheader(":woman: Personal Information:")
-    st.write(f"Nama: {name}")
-    st.write(f"NIM: {nim}")
-    st.write(f"Jurusan: {department}")
+        # Display personal information
+        st.subheader(":woman: Personal Information:")
+        st.write(f"Nama: {name}")
+        st.write(f"NIM: {nim}")
+        st.write(f"Jurusan: {department}")
+    with col2:
+        st_lottie("https://lottie.host/ad4a4d21-39c6-4114-86fd-37f6b77f25d7/ePlOVVkNyA.json")
     
 
 def data():
