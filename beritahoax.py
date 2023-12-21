@@ -16,8 +16,8 @@ from streamlit_lottie import st_lottie
 st.set_page_config(layout='wide', initial_sidebar_state='expanded')
 
 # Load your machine learning models
-model_svm_path = 'cobahoaxsvm.pkl'
-model_rf_path = 'cobahoaxrf.pkl'
+model_svm_path = 'hoaxsvm2.pkl'
+model_rf_path = 'hoaxrf2.pkl'
 
 # Load the models
 model_svm = joblib.load(model_svm_path)
