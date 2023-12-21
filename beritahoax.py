@@ -8,6 +8,7 @@ import streamlit as st
 from wordcloud import WordCloud
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
+import nltk
 
 # Load your machine learning models
 model_svm = 'hoaxsvm.pkl'
